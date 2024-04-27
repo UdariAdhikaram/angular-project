@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, viewChild } from '@angular/core';
-import { NgModule } from '@angular/core'
+import { NgModule } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 //import { AppComponent } from './app.component';
 import { RouterOutlet } from '@angular/router';
@@ -8,6 +8,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { EmpAddEditComponent } from './emp-add-edit/emp-add-edit.component';
+import { EmployeeService } form './services/employee.service';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -22,10 +23,9 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { DataSource } from '@angular/cdk/collections';
 import { error } from 'console';
-//import { CoreService } from './core/core.Service';
+import { CoreService } from './core/core.Service';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { EmployeeService } from './services/employee.service';
 
 @Component({
   selector: 'app-root',
@@ -53,7 +53,11 @@ import { EmployeeService } from './services/employee.service';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
+
 export class AppComponent implements OnInit {
+  title(title: any) {
+    throw new Error('Method not implemented.')
+  }
   displayedColumns: string[] = [
     'id', 'firstName', 'lastName', 'email', 'dob', 'gender', 'education', 'company', 'experience', 'package', 'action'
   ];
@@ -116,6 +120,14 @@ export class AppComponent implements OnInit {
       next: (val) => {
         if (val) this.getEmployeeList();
       }
+    });
+
+    dialogRef.afterClosed().subscribe({
+      next: (val) => {
+        if (val) {
+          this.getEmployeeList();
+        }
+      },
     });
   }
 }
