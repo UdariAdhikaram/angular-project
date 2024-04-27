@@ -1,12 +1,13 @@
 import { Component, OnInit, ViewChild, viewChild } from '@angular/core';
+import { NgModule } from '@angular/core'
 import { MatDialog } from '@angular/material/dialog';
+//import { AppComponent } from './app.component';
 import { RouterOutlet } from '@angular/router';
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { EmpAddEditComponent } from './emp-add-edit/emp-add-edit.component';
-import { EmployeeService } form './services/employee.service';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -21,115 +22,100 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { DataSource } from '@angular/cdk/collections';
 import { error } from 'console';
-import { CoreService } from './core/core.Service';
+//import { CoreService } from './core/core.Service';
+import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { EmployeeService } from './services/employee.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, 
-            MatFormFieldModule, 
-            MatIconModule, 
-            MatToolbarModule, 
-            MatButtonModule, 
-            MatDialogModule, 
-            MatInputModule, 
-            MatDatepickerModule, 
-            NativeDateModule, 
-            MatRadioModule,
-            MatSelectModule,
-            ReactiveFormsModule,
-            HttpClientModule,
-            MatTableModule,
-            MatPaginatorModule,
-            MatSortModule,
-            MatSnackBarModule,
-          ],
+  imports: [
+    BrowserModule,
+    BrowserAnimationsModule,
+    MatFormFieldModule, 
+    MatIconModule, 
+    MatToolbarModule, 
+    MatButtonModule, 
+    MatDialogModule, 
+    MatInputModule, 
+    MatDatepickerModule, 
+    NativeDateModule, 
+    MatRadioModule,
+    MatSelectModule,
+    ReactiveFormsModule,
+    HttpClientModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatSnackBarModule
+  ],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit{
-  title(title: any) {
-    throw new Error("Method not implemented. ");
+export class AppComponent implements OnInit {
+  displayedColumns: string[] = [
+    'id', 'firstName', 'lastName', 'email', 'dob', 'gender', 'education', 'company', 'experience', 'package', 'action'
+  ];
+  dataSource = new MatTableDataSource<any>();
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+
+  constructor(
+    private dialog: MatDialog,
+    private employeeService: EmployeeService,
+    private coreService: CoreService
+  ) {}
+
+  ngOnInit(): void {
+    this.getEmployeeList();
   }
-displayedColumns: string[] = [
-  'id',
-  'firstName',
-  'lastName',
-  'email',
-  'dob',
-  'gender',
-  'education',
-  'company',
-  'experience',
-  'package',
-  'action',
-];
-DataSource!: MatTableDataSource<any>;
 
-@ViewChild(MatPaginator) paginator!: MatPaginator;
-@ViewChild(MatSort) sort!: MatSort;
+  getEmployeeList() {
+    this.employeeService.getEmployeeList().subscribe({
+      next: (res) => {
+        this.dataSource.data = res;
+        this.dataSource.sort = this.sort;
+        this.dataSource.paginator = this.paginator;
+      },
+      error: (err) => console.error(err)
+    });
+  }
 
-constructor(
-  private _dialog: MatDialog,
-  private _empService: EmployeeService,
-  private _coreService: CoreService
-) {}
-
-ngOnInit(): void{
-  this.getEmployeeList();
-}
-
-openAddEditEmpForm() {
-  const dialogRef = this._dialog.open(EmpAddEditComponent);
-  dialogRef.afterClosed().subscribe({
-    next: (val) => {
-      if (val) {
-        this.getEmployeeList();
+  openAddEditEmpForm() {
+    const dialogRef = this.dialog.open(EmpAddEditComponent);
+    dialogRef.afterClosed().subscribe({
+      next: (val) => {
+        if (val) this.getEmployeeList();
       }
-    },
-  });
-}
-getEmployeeList(){
-  this._empService.getEmployeeList().subscribe({
-    next: (res) => {
-      this.DataSource = new MatTableDataSource(res);
-      this.DataSource.sort = this.sort;
-      this.DataSource.paginator = this.paginator;
-    },
-    error: console.log,
-  });
-}
+    });
+  }
 
-applyFilter(event: Event) {
-  const filterValue = (event.target as HTMLInputElement).value;
-  this.dataSource.filter = filterValue.trim().toLowerCase();
+  applyFilter(event: Event) {
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = filterValue.trim().toLowerCase();
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
+  }
 
-if (this.dataSource.paginator) {
-  this.dataSource.paginator.firstPage();
-}
-} 
-deleteEmployee(id: number) {
-  this._empService.deleteEmployee(id).subscribe({
-    next: (res) => {
-      this._coreService.openSnackBar('Employee deleted', 'done');
-      this.getEmployeeList();
-    },
-    error: console.log,
-  });
-}
-
-openEditForm(data: any) {
-  const dialogRef = this._dialog.open(EmpAddEditComponent, {
-    data,
-  });
-
-  dialogRef.afterClosed().subscribe({
-    next: (val) => {
-      if (val) {
+  deleteEmployee(id: number) {
+    this.employeeService.deleteEmployee(id).subscribe({
+      next: () => {
+        this.coreService.openSnackBar('Employee deleted', 'done');
         this.getEmployeeList();
-      }
-    },
-  });
-}
-}
+      },
+      error: (err) => console.error(err)
+    });
+  }
 
+  openEditForm(data: any) {
+    const dialogRef = this.dialog.open(EmpAddEditComponent, { data });
+    dialogRef.afterClosed().subscribe({
+      next: (val) => {
+        if (val) this.getEmployeeList();
+      }
+    });
+  }
+}
